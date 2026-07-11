@@ -33,4 +33,5 @@ jobs:
           git config user.email "actions@github.com"
           git add profiles/images/processed profiles/qr
           git diff --staged --quiet || git commit -m "Auto-process new photo(s)"
+          git pull --rebase origin main
           git push
