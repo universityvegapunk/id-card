@@ -22,7 +22,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install free open-source tools
-        run: pip install rembg pillow qrcode[pil]
+        run: pip install "rembg[cpu]" pillow "qrcode[pil]"
 
       - name: Remove background, auto-crop, add white outline, generate QR
         run: python scripts/process_photo.py
