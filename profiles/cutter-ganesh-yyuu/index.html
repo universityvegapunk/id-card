@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital ID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo&#43;Black&amp;family=Space&#43;Grotesk:wght@400;500;700&amp;family=JetBrains&#43;Mono:wght@500&amp;display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg-void:      #0A0A0C;
+  --surface:      #17171B;
+  --surface-line: #26262C;
+  --text-hi:      #F2F1ED;
+  --text-lo:      #8C8C93;
+  --accent:       #4A5CFF;
+  --accent-2:     #8C5CFF;
+  --radius:       28px;
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{
+  min-height:100vh;
+  background:radial-gradient(120% 90% at 50% -10%, #1a1a22 0%, var(--bg-void) 55%);
+  display:flex; align-items:center; justify-content:center;
+  padding:48px 20px;
+  font-family:'Space Grotesk', sans-serif;
+  perspective:1200px;
+  overflow-x:hidden;
+}
+.clip-wrap{ position:relative; display:flex; flex-direction:column; align-items:center; }
+.clip{
+  width:46px; height:56px; border-radius:10px;
+  background:linear-gradient(180deg,#3a3a42,#1c1c20);
+  border:1px solid #3f3f47; margin-bottom:-18px; z-index:3;
+  box-shadow:0 6px 14px rgba(0,0,0,.5);
+}
+.clip::after{
+  content:""; position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  width:16px; height:16px; border-radius:50%; background:var(--bg-void);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.6);
+}
+.card{
+  --rx:0deg; --ry:0deg;
+  position:relative; width:min(380px,86vw); border-radius:var(--radius);
+  background:linear-gradient(165deg, var(--surface), #101013 80%);
+  border:1px solid var(--surface-line);
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.7), 0 10px 20px -10px rgba(0,0,0,.5);
+  overflow:hidden;
+  transform:rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style:preserve-3d;
+  transition:transform .4s cubic-bezier(.16,1,.3,1);
+  animation:drop-in .9s cubic-bezier(.2,1.4,.4,1) both;
+}
+@keyframes drop-in{
+  0%{ transform:translateY(-40px) rotateX(18deg) scale(.94); opacity:0; }
+  60%{ opacity:1; }
+  100%{ transform:translateY(0) rotateX(0) scale(1); opacity:1; }
+}
+@media (prefers-reduced-motion:reduce){ .card{ animation:none; transition:none; transform:none !important; } }
+.topbar{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:20px 24px 0; font-family:'JetBrains Mono',monospace; font-size:11px;
+  letter-spacing:.12em; color:var(--text-lo); text-transform:uppercase;
+}
+.topbar .org{ color:var(--text-hi); font-weight:500; }
+.stage{
+  position:relative; height:280px; margin-top:6px;
+  display:flex; align-items:flex-end; justify-content:center; overflow:hidden;
+}
+.ghost{
+  position:absolute; left:50%; top:38%; transform:translate(-50%,-50%);
+  font-family:'Archivo Black',sans-serif; font-size:clamp(64px,22vw,104px);
+  line-height:1; white-space:nowrap; letter-spacing:-.02em;
+  background:linear-gradient(100deg, var(--accent), var(--accent-2), var(--accent));
+  background-size:220% 100%; -webkit-background-clip:text; background-clip:text;
+  color:transparent; opacity:.5; animation:sheen 7s ease-in-out infinite;
+  pointer-events:none; z-index:1;
+}
+@keyframes sheen{ 0%,100%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } }
+@media (prefers-reduced-motion:reduce){ .ghost{ animation:none; } }
+.photo-mask{
+  position:relative; z-index:2; width:200px; height:240px;
+  border-radius:20px 20px 100px 100px; overflow:hidden; background:#0d0d10;
+  box-shadow:0 20px 40px -15px rgba(0,0,0,.6);
+}
+.photo-mask img{ width:100%; height:100%; object-fit:cover; display:block; }
+.photo-mask.placeholder{
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Archivo Black',sans-serif; font-size:64px; color:var(--text-lo);
+  background:linear-gradient(160deg,#1c1c22,#0d0d10);
+}
+.identity{ text-align:center; padding:22px 24px 6px; }
+.name{ font-family:'Archivo Black',sans-serif; font-size:26px; color:var(--text-hi); letter-spacing:-.01em; }
+.role{ margin-top:6px; font-size:13px; color:var(--text-lo); text-transform:uppercase; letter-spacing:.14em; }
+.batch{ margin-top:4px; font-family:'JetBrains Mono',monospace; font-size:11px; color:#57575e; letter-spacing:.1em; }
+.blood{
+  display:inline-block; margin-top:12px; padding:5px 14px; border-radius:100px;
+  border:1px solid var(--surface-line); font-family:'JetBrains Mono',monospace;
+  font-size:11px; letter-spacing:.1em; color:var(--accent);
+}
+.perf{ position:relative; height:1px; margin:22px 0 4px; background:var(--surface-line); }
+.perf::before{
+  content:""; position:absolute; inset:0;
+  background-image:radial-gradient(circle, var(--bg-void) 2.5px, transparent 2.6px);
+  background-size:14px 100%; background-position:7px 0;
+}
+.links{ padding:4px 10px 20px; }
+.row{
+  display:flex; align-items:center; gap:14px; padding:16px 14px; border-radius:14px;
+  text-decoration:none; color:var(--text-hi);
+  transition:background .25s ease, transform .25s ease;
+}
+.row:hover, .row:focus-visible{ background:#1e1e24; transform:translateX(2px); }
+.row:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.row .icon{ width:20px; height:20px; flex-shrink:0; color:var(--accent); }
+.row .icon svg{ width:100%; height:100%; }
+.row .label{ flex:1; font-size:14px; font-weight:500; letter-spacing:.02em; }
+.row .arrow{ font-size:16px; color:var(--text-lo); transition:transform .25s ease; }
+.row:hover .arrow{ transform:translate(3px,-3px); color:var(--accent); }
+footer.tag{
+  text-align:center; padding:4px 0 22px; font-family:'JetBrains Mono',monospace;
+  font-size:10px; letter-spacing:.15em; color:#3f3f46; text-transform:uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="clip-wrap">
+  <div class="clip"></div>
+  <div class="card" id="card">
+    <div class="topbar">
+      <span class="org" id="org-left">EIE</span>
+      <span id="org-right">MASC</span>
+    </div>
+    <div class="stage">
+      <div class="ghost" id="ghost">EIE</div>
+      <div class="photo-mask" id="photoMask"></div>
+    </div>
+    <div class="identity">
+      <div class="name" id="name">YOUR NAME</div>
+      <div class="role" id="role">Your Role · Department</div>
+      <div class="batch" id="batch">2024 — 2028</div>
+      <div class="blood" id="blood"></div>
+    </div>
+    <div class="perf"></div>
+    <div class="links" id="links"></div>
+    <footer class="tag">Digital ID · Tap a link to connect</footer>
+  </div>
+</div>
+
+<script>
+
+
+const PROFILE = {"orgLeft":"EIE","orgRight":"EIE","ghostText":"EIE","name":"cutter ganesh","role":"STUDENT","batch":"2024-2028","bloodGroup":"B+","photo":"../images/processed/cutter-ganesh-yyuu.png","links":[{"label":"Email","url":"mailto:cutterganesh@gmail.com","icon":"mail"},{"label":"Phone","url":"tel:2244668800","icon":"phone"}]};
+
+const ICONS = {
+  linkedin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4V8h4v1.5A5.98 5.98 0 0 1 16 8Z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
+  instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>',
+  mail:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+  phone:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 2 .7 3a2 2 0 0 1-.4 2.1L8 10.3a16 16 0 0 0 6 6l1.5-1.4a2 2 0 0 1 2.1-.4c1 .4 2 .6 3 .7a2 2 0 0 1 1.4 2Z"/></svg>'
+};
+
+document.getElementById('org-left').textContent  = PROFILE.orgLeft;
+document.getElementById('org-right').textContent = PROFILE.orgRight;
+document.getElementById('ghost').textContent      = PROFILE.ghostText;
+document.getElementById('name').textContent       = PROFILE.name;
+document.getElementById('role').textContent       = PROFILE.role;
+document.getElementById('batch').textContent      = PROFILE.batch;
+
+const bloodEl = document.getElementById('blood');
+if(PROFILE.bloodGroup){
+  bloodEl.textContent = PROFILE.bloodGroup;
+}else{
+  bloodEl.style.display = 'none';
+}
+
+const photoMask = document.getElementById('photoMask');
+if(PROFILE.photo){
+  const img = document.createElement('img');
+  img.src = PROFILE.photo;
+  img.alt = PROFILE.name;
+  photoMask.appendChild(img);
+}else{
+  photoMask.classList.add('placeholder');
+  photoMask.textContent = PROFILE.name.trim().charAt(0) || "?";
+}
+
+const linksEl = document.getElementById('links');
+PROFILE.links.forEach(function(l){
+  const a = document.createElement('a');
+  a.className = 'row';
+  a.href = l.url;
+  a.target = l.url.indexOf('http') === 0 ? '_blank' : '_self';
+  a.rel = 'noopener';
+  a.innerHTML = '<span class="icon">' + (ICONS[l.icon] || '') + '</span><span class="label">' + l.label + '</span><span class="arrow">↗</span>';
+  linksEl.appendChild(a);
+});
+
+const card = document.getElementById('card');
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+if(!prefersReduced){
+  window.addEventListener('mousemove', function(e){
+    const rx = ((e.clientY / window.innerHeight) - 0.5) * -8;
+    const ry = ((e.clientX / window.innerWidth) - 0.5) * 10;
+    card.style.setProperty('--rx', rx.toFixed(2)+'deg');
+    card.style.setProperty('--ry', ry.toFixed(2)+'deg');
+  });
+  window.addEventListener('deviceorientation', function(e){
+    if(e.beta == null || e.gamma == null) return;
+    const rx = Math.max(-8, Math.min(8, (e.beta - 45) * -0.15));
+    const ry = Math.max(-10, Math.min(10, e.gamma * 0.3));
+    card.style.setProperty('--rx', rx.toFixed(2)+'deg');
+    card.style.setProperty('--ry', ry.toFixed(2)+'deg');
+  });
+}
+</script>
+</body>
+</html>
