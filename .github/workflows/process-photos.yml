@@ -1,0 +1,36 @@
+name: Process new ID photos
+
+# Runs automatically every time a new photo lands in profiles/images/
+# via the Apps Script automation. Free forever — public repos get
+# unlimited GitHub Actions minutes, no card required.
+on:
+  push:
+    paths:
+      - 'profiles/images/*.jpg'
+
+permissions:
+  contents: write
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install free open-source tools
+        run: pip install rembg pillow qrcode[pil]
+
+      - name: Remove background, auto-crop, add white outline, generate QR
+        run: python scripts/process_photo.py
+
+      - name: Commit the processed files back to the repo
+        run: |
+          git config user.name "id-card-bot"
+          git config user.email "actions@github.com"
+          git add profiles/images/processed profiles/qr
+          git diff --staged --quiet || git commit -m "Auto-process new photo(s)"
+          git push
