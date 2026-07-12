@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital ID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&amp;display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:      #0A0A0A;
+  --fg:      #FFFFFF;
+  --muted:   #8A8A8A;
+  --divider: #242424;
+  --row-hover: #161616;
+  --accent:  #5B5AE6;
+}
+:root[data-theme="light"]{
+  --bg:      #FFFFFF;
+  --fg:      #0A0A0A;
+  --muted:   #6B6B6B;
+  --divider: #E7E7E7;
+  --row-hover: #F5F5F5;
+  --accent:  #5B5AE6;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:'Inter', sans-serif;
+  min-height:100vh;
+  transition:background .25s ease, color .25s ease;
+}
+
+.page{
+  max-width:1100px;
+  margin:0 auto;
+  padding:28px 20px 100px;
+}
+
+ 
+.layout{
+  display:flex;
+  flex-direction:column;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding-bottom:32px;
+}
+.header .mark{
+  font-weight:800;
+  font-size:14px;
+  letter-spacing:.08em;
+}
+.header .institution{
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.14em;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+
+.role{
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+
+.name{
+  font-size:clamp(30px,6vw,44px);
+  font-weight:800;
+  letter-spacing:-.01em;
+  text-transform:uppercase;
+  line-height:1.05;
+  margin-bottom:28px;
+}
+
+.portrait{
+  width:100%;
+  max-width:340px;
+  margin:0 auto 28px;
+  display:flex;
+  justify-content:center;
+}
+.portrait img{
+  width:100%;
+  height:auto;
+  display:block;
+  object-fit:contain;
+}
+.portrait.placeholder{
+  aspect-ratio:3/4;
+  border-radius:12px;
+  background:var(--row-hover);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:64px;
+  font-weight:800;
+  color:var(--muted);
+}
+
+.meta{ margin-bottom:34px; }
+.meta .dept{
+  font-size:16px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.meta .batch{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+  letter-spacing:.04em;
+}
+.meta .blood{
+  display:inline-block;
+  margin-top:12px;
+  padding:4px 12px;
+  border-radius:100px;
+  border:1px solid var(--divider);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.08em;
+  color:var(--accent);
+}
+
+.links{ border-top:1px solid var(--divider); }
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px 6px;
+  border-bottom:1px solid var(--divider);
+  text-decoration:none;
+  color:var(--fg);
+  transition:background .2s ease, padding-left .2s ease;
+}
+.row:hover, .row:focus-visible{
+  background:var(--row-hover);
+  padding-left:14px;
+}
+.row .label{
+  font-weight:700;
+  font-size:14px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.row .arrow{
+  color:var(--muted);
+  font-size:16px;
+  transition:transform .2s ease, color .2s ease;
+}
+.row:hover .arrow{ transform:translate(3px,-3px); color:var(--accent); }
+
+footer.tag{
+  text-align:center;
+  padding-top:32px;
+  font-size:10px;
+  letter-spacing:.15em;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+
+ 
+.theme-btn{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  border:1px solid var(--divider);
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.theme-btn svg{ width:15px; height:15px; stroke:var(--fg); }
+.theme-btn:hover{ border-color:var(--accent); }
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+ 
+@media (min-width:900px){
+  .page{ padding-top:60px; }
+  .layout{
+    display:grid;
+    grid-template-columns:44% 56%;
+    grid-template-areas:
+      "portrait header"
+      "portrait role"
+      "portrait name"
+      "portrait meta"
+      "portrait links";
+    column-gap:64px;
+    align-items:start;
+  }
+  .header{ grid-area:header; padding-bottom:24px; }
+  .role{ grid-area:role; }
+  .name{ grid-area:name; }
+  .meta{ grid-area:meta; }
+  .links{ grid-area:links; }
+  .portrait{
+    grid-area:portrait;
+    max-width:none;
+    height:calc(100vh - 120px);
+    position:sticky;
+    top:60px;
+    margin:0;
+  }
+  .portrait img{ height:100%; width:100%; object-fit:contain; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="layout">
+    <div class="header">
+      <span class="mark" id="mark">EIE</span>
+      <div class="header-right">
+        <span class="institution" id="institution">SAHE</span>
+        <button class="theme-btn" id="themeToggle" aria-label="Toggle light/dark theme">
+          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="role" id="role">STUDENT</div>
+    <h1 class="name" id="name">YOUR NAME</h1>
+
+    <div class="portrait" id="portrait"></div>
+
+    <div class="meta">
+      <div class="dept" id="dept">Department</div>
+      <div class="batch" id="batch">2024 — 2028</div>
+      <div class="blood" id="blood"></div>
+    </div>
+
+    <div class="links" id="links"></div>
+  </div>
+
+  <footer class="tag">Digital ID · Tap a link to connect</footer>
+</div>
+
+<script>
+ 
+const PROFILE = {"orgLeft":"EIE","institution":"SAHE","orgRight":"EIE","name":"roller bajji","role":"STUDENT","batch":"2024-2028","bloodGroup":"B-","photo":"../images/processed/roller-bajji-y772.png","links":[{"label":"Email","url":"mailto:rollerbajji@hotmail.com","icon":"mail"},{"label":"Phone","url":"tel:7788877773","icon":"phone"}]};
+
+const ICONS = {
+  linkedin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4V8h4v1.5A5.98 5.98 0 0 1 16 8Z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>',
+  instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>',
+  mail:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+  phone:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 2 .7 3a2 2 0 0 1-.4 2.1L8 10.3a16 16 0 0 0 6 6l1.5-1.4a2 2 0 0 1 2.1-.4c1 .4 2 .6 3 .7a2 2 0 0 1 1.4 2Z"/></svg>'
+};
+
+document.getElementById('mark').textContent = PROFILE.orgLeft || 'EIE';
+document.getElementById('institution').textContent = PROFILE.institution || 'SAHE';
+document.getElementById('role').textContent = PROFILE.role || 'STUDENT';
+document.getElementById('name').textContent = PROFILE.name;
+document.getElementById('dept').textContent = PROFILE.orgRight || '';
+document.getElementById('batch').textContent = PROFILE.batch || '';
+
+const bloodEl = document.getElementById('blood');
+if(PROFILE.bloodGroup){
+  bloodEl.textContent = PROFILE.bloodGroup;
+}else{
+  bloodEl.style.display = 'none';
+}
+
+const portrait = document.getElementById('portrait');
+if(PROFILE.photo){
+  const img = document.createElement('img');
+  img.src = PROFILE.photo;
+  img.alt = PROFILE.name;
+  portrait.appendChild(img);
+}else{
+  portrait.classList.add('placeholder');
+  portrait.textContent = (PROFILE.name || '?').trim().charAt(0);
+}
+
+const linksEl = document.getElementById('links');
+(PROFILE.links || []).forEach(function(l){
+  const a = document.createElement('a');
+  a.className = 'row';
+  a.href = l.url;
+  a.target = l.url.indexOf('http') === 0 ? '_blank' : '_self';
+  a.rel = 'noopener';
+  a.innerHTML = '<span class="label">' + l.label + '</span><span class="arrow">↗</span>';
+  linksEl.appendChild(a);
+});
+
+ 
+const SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+const MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>';
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeIcon').innerHTML = theme === 'light' ? MOON : SUN;
+  localStorage.setItem('id-card-theme', theme);
+}
+
+const saved = localStorage.getItem('id-card-theme');
+const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+applyTheme(saved || (systemPrefersLight ? 'light' : 'dark'));
+
+document.getElementById('themeToggle').addEventListener('click', function(){
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'light' ? 'dark' : 'light');
+});
+</script>
+</body>
+</html>
