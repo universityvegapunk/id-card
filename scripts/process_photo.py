@@ -29,8 +29,6 @@ REPO_NAME  = "id-card"              # your repo name
 OUTLINE_PX = 14                     # thickness of the white outline
 PADDING_PX = 24                     # transparent breathing room around the cutout
 INSTITUTION = "SAHE"
-DEPT_LINE_1 = "DEPARTMENT OF"
-DEPT_LINE_2 = "ELECTRONICS & INSTRUMENTATION"
 # =================================
 
 SRC_DIR   = Path("profiles/images")
@@ -44,11 +42,19 @@ for d in (OUT_DIR, QR_DIR, CARD_DIR):
 FONT_PATH = Path("ArchivoBlack-Regular.ttf")
 FONT_URL = "https://raw.githubusercontent.com/google/fonts/main/ofl/archivoblack/ArchivoBlack-Regular.ttf"
 
+FONT_ITALIC_PATH = Path("PlayfairDisplay-Italic.ttf")
+FONT_ITALIC_URL = "https://raw.githubusercontent.com/google/fonts/main/ofl/playfairdisplay/PlayfairDisplay-Italic%5Bwght%5D.ttf"
+
+BG_TEXTURE_PATH = Path("assets/card-bg.jpg")
+
 
 def ensure_font():
     if not FONT_PATH.exists():
         print("Downloading free Archivo Black font (Google Fonts, open license)...")
         urllib.request.urlretrieve(FONT_URL, FONT_PATH)
+    if not FONT_ITALIC_PATH.exists():
+        print("Downloading free Playfair Display Italic font (Google Fonts, open license)...")
+        urllib.request.urlretrieve(FONT_ITALIC_URL, FONT_ITALIC_PATH)
 
 
 def process_one(jpg_path: Path):
@@ -115,79 +121,75 @@ def process_one(jpg_path: Path):
 def generate_card_front(cutout_img: Image.Image, data: dict, out_path: Path):
     ensure_font()
     W, H = 1013, 1600
-    card = Image.new("RGBA", (W, H), (10, 10, 10, 255))
+
+    # Background: your provided texture, scaled to fully cover the card.
+    # Falls back to a plain dark navy if the texture asset isn't found.
+    if BG_TEXTURE_PATH.exists():
+        bg = Image.open(BG_TEXTURE_PATH).convert("RGB")
+        ratio = max(W / bg.width, H / bg.height)
+        bg = bg.resize((int(bg.width * ratio) + 1, int(bg.height * ratio) + 1))
+        bg = bg.crop((0, 0, W, H))
+        card = bg.convert("RGBA")
+    else:
+        card = Image.new("RGBA", (W, H), (8, 8, 16, 255))
+
     draw = ImageDraw.Draw(card)
 
-    # 1. Giant stretched initials, starting below the top clearance gap
-    #    (that gap is left clean for the physical lanyard slot punch)
+    # 1. Header — small "EIE" mark top-left, "SAHE" + subtitle top-right
+    font_mark = ImageFont.truetype(str(FONT_PATH), 40)
+    draw.text((44, 44), "EIE", font=font_mark, fill=(255, 255, 255, 255))
+
+    font_inst = ImageFont.truetype(str(FONT_PATH), 46)
+    font_inst_sub = ImageFont.truetype(str(FONT_ITALIC_PATH), 20)
+    inst = INSTITUTION
+    bbox = draw.textbbox((0, 0), inst, font=font_inst)
+    draw.text((W - 44 - (bbox[2] - bbox[0]), 40), inst, font=font_inst, fill=(255, 255, 255, 255))
+    sub = "Deemed to be University"
+    bbox2 = draw.textbbox((0, 0), sub, font=font_inst_sub)
+    draw.text((W - 44 - (bbox2[2] - bbox2[0]), 92), sub, font=font_inst_sub, fill=(210, 210, 210, 255))
+
+    # 2. Giant light-gray initials, bleeding toward the edges
+    font_big = ImageFont.truetype(str(FONT_PATH), 560)
     initials = "EIE"
-    font_big = ImageFont.truetype(str(FONT_PATH), 620)
     bbox = draw.textbbox((0, 0), initials, font=font_big)
     tw = bbox[2] - bbox[0]
-    top_gap = int(H * 0.16)
-    draw.text(((W - tw) / 2, top_gap), initials, font=font_big, fill=(255, 255, 255, 255))
+    draw.text(((W - tw) / 2, 170), initials, font=font_big, fill=(210, 210, 212, 235))
 
-    # 2. Micro-logos near the very top edge
-    font_micro = ImageFont.truetype(str(FONT_PATH), 26)
-    draw.text((36, 40), "EIE", font=font_micro, fill=(255, 255, 255, 230))
-    tag = INSTITUTION
-    bbox2 = draw.textbbox((0, 0), tag, font=font_micro)
-    draw.text((W - 36 - (bbox2[2] - bbox2[0]), 40), tag, font=font_micro, fill=(255, 255, 255, 230))
-
-    # 3. Photo cutout, overlapping the giant letters
-    target_h = int(H * 0.56)
+    # 3. Photo cutout (with the white sticker outline), large, overlapping the letters
+    target_h = int(H * 0.62)
     ratio = target_h / cutout_img.height
     resized = cutout_img.resize((int(cutout_img.width * ratio), target_h))
     px = (W - resized.width) // 2
-    py = H - target_h - 210
+    py = int(H * 0.30)
     card.alpha_composite(resized, (px, py))
 
-    # 4. Black gradient fog rising from the footer — unifies photo + letters
-    #    into a dark base so the name/role text stays readable
-    gradient = Image.new("L", (1, H), 0)
+    # 4. Translucent black fog rising from the footer — unifies the texture
+    #    and the bottom of the photo into a dark base so the name/role
+    #    text stays readable, matching the reference's bottom fade
+    fog = Image.new("L", (1, H), 0)
     for y in range(H):
-        t = (y - H * 0.5) / (H * 0.42)
+        t = (y - H * 0.58) / (H * 0.35)
         t = max(0.0, min(1.0, t))
-        gradient.putpixel((0, y), int(255 * (t ** 1.6)))
-    gradient = gradient.resize((W, H))
-    black_layer = Image.new("RGBA", (W, H), (5, 5, 8, 255))
-    black_layer.putalpha(gradient)
-    card.alpha_composite(black_layer)
+        fog.putpixel((0, y), int(255 * (t ** 1.4)))
+    fog = fog.resize((W, H))
+    fog_layer = Image.new("RGBA", (W, H), (4, 4, 10, 255))
+    fog_layer.putalpha(fog)
+    card.alpha_composite(fog_layer)
 
-    # 5. Name — medium, bold, title case
+    # 5. Name, bold, right under the photo
     name = (data.get("name") or "Your Name").strip().title()
-    font_name = ImageFont.truetype(str(FONT_PATH), 62)
+    font_name = ImageFont.truetype(str(FONT_PATH), 66)
     bbox = draw.textbbox((0, 0), name, font=font_name)
     tw = bbox[2] - bbox[0]
-    name_y = H - 250
+    name_y = py + target_h - 20
     draw.text(((W - tw) / 2, name_y), name, font=font_name, fill=(255, 255, 255, 255))
 
-    # 6. Role capsule — thin blue-bordered box directly under the name
-    role = (data.get("role") or "STUDENT").upper()
-    font_role = ImageFont.truetype(str(FONT_PATH), 22)
+    # 6. Role/title, italic serif, anchored near the bottom
+    role = data.get("role") or "Student"
+    font_role = ImageFont.truetype(str(FONT_ITALIC_PATH), 34)
     bbox = draw.textbbox((0, 0), role, font=font_role)
-    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    pad_x, pad_y = 18, 10
-    cap_y = name_y + 78
-    cap_box = [(W - tw) / 2 - pad_x, cap_y, (W + tw) / 2 + pad_x, cap_y + th + pad_y * 2]
-    draw.rounded_rectangle(cap_box, radius=4, outline=(90, 120, 255, 255), width=2)
-    draw.text(((W - tw) / 2, cap_y + pad_y - 2), role, font=font_role, fill=(150, 175, 255, 255))
-
-    # 7. Department footer — italic-style via a slight shear transform
-    dept = data.get("dept") or ""
-    if dept:
-        font_dept = ImageFont.truetype(str(FONT_PATH), 30)
-        dept_txt = Image.new("RGBA", (300, 60), (0, 0, 0, 0))
-        d2 = ImageDraw.Draw(dept_txt)
-        d2.text((10, 5), dept, font=font_dept, fill=(220, 220, 220, 255))
-        shear = 0.25
-        dept_txt = dept_txt.transform((300, 60), Image.AFFINE, (1, shear, -shear * 30, 0, 1, 0), resample=Image.BICUBIC)
-        card.alpha_composite(dept_txt, (int(W / 2 - 70), H - 90))
-
-    # 8. Small double-arrow accent, bottom right corner
-    ax, ay = W - 70, H - 56
-    draw.polygon([(ax, ay - 10), (ax + 12, ay), (ax, ay + 10)], fill=(120, 120, 120, 255))
-    draw.polygon([(ax + 14, ay - 10), (ax + 26, ay), (ax + 14, ay + 10)], fill=(120, 120, 120, 255))
+    tw = bbox[2] - bbox[0]
+    draw.text(((W - tw) / 2, H - 80), role, font=font_role, fill=(225, 225, 225, 255))
 
     card.convert("RGB").save(out_path)
 
@@ -195,53 +197,81 @@ def generate_card_front(cutout_img: Image.Image, data: dict, out_path: Path):
 def generate_card_back(qr_img: Image.Image, data: dict, out_path: Path):
     ensure_font()
     W, H = 1013, 1600
-    card = Image.new("RGB", (W, H), (10, 10, 10))
+    card = Image.new("RGBA", (W, H), (10, 10, 10, 255))
     draw = ImageDraw.Draw(card)
 
+    # 1. Top lanyard clearance gap, then the Bauhaus checkerboard pattern
+    top_gap = int(H * 0.10)
+    pattern_h = int(H * 0.40)
     tile = W // 4
-    for row in range(2):
+    rows = (pattern_h // tile) + 1
+    for row in range(rows):
         for col in range(4):
-            x0, y0 = col * tile, row * tile
+            x0, y0 = col * tile, top_gap + row * tile
+            if y0 > top_gap + pattern_h:
+                continue
             flip = (row + col) % 2 == 0
-            bg = (255, 255, 255) if flip else (10, 10, 10)
-            fg = (10, 10, 10) if flip else (255, 255, 255)
+            bg = (255, 255, 255, 255) if flip else (10, 10, 10, 255)
+            fg = (10, 10, 10, 255) if flip else (255, 255, 255, 255)
             draw.rectangle([x0, y0, x0 + tile, y0 + tile], fill=bg)
             if flip:
                 draw.pieslice([x0 - tile, y0, x0 + tile, y0 + 2 * tile], 0, 90, fill=fg)
             else:
                 draw.pieslice([x0, y0 - tile, x0 + 2 * tile, y0 + tile], 180, 270, fill=fg)
 
-    qr_size = 420
-    qr_resized = qr_img.resize((qr_size, qr_size))
-    qx = (W - qr_size) // 2
-    qy = tile * 2 + 90
-    card.paste(qr_resized, (qx, qy))
+    # 2. QR code with rounded corners + white padding frame for scanner contrast
+    qr_size = 380
+    qr_resized = qr_img.convert("RGBA").resize((qr_size, qr_size))
+    frame_pad = 24
+    frame_size = qr_size + frame_pad * 2
+    frame = Image.new("RGBA", (frame_size, frame_size), (0, 0, 0, 0))
+    fd = ImageDraw.Draw(frame)
+    fd.rounded_rectangle([0, 0, frame_size, frame_size], radius=28, fill=(255, 255, 255, 255))
+    frame.alpha_composite(qr_resized, (frame_pad, frame_pad))
+    mask = Image.new("L", (frame_size, frame_size), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, frame_size, frame_size], radius=28, fill=255)
+    frame.putalpha(mask)
 
-    font_dept = ImageFont.truetype(str(FONT_PATH), 34)
-    font_small = ImageFont.truetype(str(FONT_PATH), 26)
+    qx = (W - frame_size) // 2
+    qy = top_gap + pattern_h + 70
+    card.alpha_composite(frame, (qx, qy))
 
+    # 3. Department + phone
+    font_label = ImageFont.truetype(str(FONT_PATH), 24)
+    font_dept = ImageFont.truetype(str(FONT_PATH), 32)
+    dept = (data.get("dept") or "").upper()
     phone = data.get("phone") or ""
+
+    y = qy + frame_size + 45
     lines = [
-        (DEPT_LINE_1, font_small, (150, 150, 150)),
-        (DEPT_LINE_2, font_dept, (255, 255, 255)),
-        (phone, font_small, (150, 150, 150)),
+        ("DEPARTMENT OF", font_label, (150, 150, 150, 255)),
+        (dept, font_dept, (255, 255, 255, 255)),
+        (str(phone), font_label, (170, 170, 170, 255)),
     ]
-    y = qy + qr_size + 50
-    for line, font, color in lines:
-        if not line:
+    for text, font, color in lines:
+        if not text:
             continue
-        bbox = draw.textbbox((0, 0), line, font=font)
+        bbox = draw.textbbox((0, 0), text, font=font)
         tw = bbox[2] - bbox[0]
-        draw.text(((W - tw) / 2, y), line, font=font, fill=color)
-        y += (bbox[3] - bbox[1]) + 20
+        draw.text(((W - tw) / 2, y), text, font=font, fill=color)
+        y += (bbox[3] - bbox[1]) + 18
 
-    # Reserved space for your college logo — add it here later
-    placeholder = "[ LOGO SPACE ]"
-    bbox = draw.textbbox((0, 0), placeholder, font=font_small)
-    tw = bbox[2] - bbox[0]
-    draw.text(((W - tw) / 2, H - 90), placeholder, font=font_small, fill=(90, 90, 90))
+    # 4. Institutional branding stack — small geometric mark + stacked caps text
+    y += 20
+    mark_r = 10
+    draw.regular_polygon((W / 2, y + mark_r, mark_r), n_sides=4, rotation=45, fill=(255, 255, 255, 255))
+    y += mark_r * 2 + 14
 
-    card.save(out_path)
+    font_inst1 = ImageFont.truetype(str(FONT_PATH), 20)
+    font_inst2 = ImageFont.truetype(str(FONT_PATH), 16)
+    for text, font, color in [(INSTITUTION, font_inst1, (220, 220, 220, 255)),
+                               ("DEEMED TO BE UNIVERSITY", font_inst2, (130, 130, 130, 255))]:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw = bbox[2] - bbox[0]
+        draw.text(((W - tw) / 2, y), text, font=font, fill=color)
+        y += (bbox[3] - bbox[1]) + 10
+
+    card.convert("RGB").save(out_path)
 
 
 def main():
